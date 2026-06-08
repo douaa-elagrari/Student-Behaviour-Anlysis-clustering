@@ -1473,14 +1473,9 @@ function showToast(msg) {
 
 // ── Init ─────────────────────────────────────────────────────────────────────
 buildSliders();
-// Wake backend on page load
-fetch(`${API}/health`).catch(() => {});
-
-buildSliders();
 </script>
 </body>
 </html>
-
 
 
 
