@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8"/>
+<link rel="icon" type="image/svg+xml" href="favicon.svg"/>
 <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
 <title>Student Cluster Intelligence</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
@@ -707,7 +708,8 @@ header {
 <div class="toast" id="toast"></div>
 
 <script>
-const API = 'http://localhost:8000';
+  const API = 'https://student-behaviour-anlysis-clustering-2-xvvd.onrender.com';
+
 
 // ── Feature config ────────────────────────────────────────────────────────────
 const FEAT_CONFIG = {
@@ -1471,6 +1473,22 @@ function showToast(msg) {
 
 // ── Init ─────────────────────────────────────────────────────────────────────
 buildSliders();
+// Wake backend on page load
+fetch(`${API}/health`).catch(() => {});
+
+buildSliders();
 </script>
 </body>
 </html>
+
+
+
+
+
+
+
+
+
+
+
+
