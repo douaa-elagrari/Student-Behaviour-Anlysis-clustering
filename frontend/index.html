@@ -1,0 +1,1476 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Student Cluster Intelligence</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=IBM+Plex+Mono:ital,wght@0,300;0,400;0,500;1,300&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,300&display=swap" rel="stylesheet"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+:root {
+  --bg:       #07090f;
+  --surface:  #0e1420;
+  --surface2: #141c2e;
+  --surface3: #1a2340;
+  --border:   rgba(255,255,255,.07);
+  --border2:  rgba(255,255,255,.12);
+  --accent:   #00d4c8;
+  --accent2:  #7c6aff;
+  --accent3:  #ff6b9d;
+  --text:     #e2e8f5;
+  --muted:    #6b7a99;
+  --muted2:   #9aabcc;
+  --risk-low:      #34d399;
+  --risk-med:      #fbbf24;
+  --risk-high:     #fb923c;
+  --risk-critical: #f87171;
+  --cl0: #fb923c; --cl1: #34d399; --cl2: #fbbf24;
+  --cl3: #60a5fa; --cl4: #f87171; --cl5: #c084fc;
+  --r: 14px;
+  --r-sm: 8px;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'DM Sans', sans-serif;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* Grid bg */
+body::before {
+  content: '';
+  position: fixed; inset: 0; z-index: 0;
+  background-image:
+    linear-gradient(rgba(0,212,200,.018) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0,212,200,.018) 1px, transparent 1px);
+  background-size: 40px 40px;
+  pointer-events: none;
+}
+
+/* Ambient glow */
+body::after {
+  content: '';
+  position: fixed;
+  top: -20%; left: -10%;
+  width: 60%; height: 60%;
+  background: radial-gradient(ellipse, rgba(124,106,255,.06) 0%, transparent 70%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.shell { position: relative; z-index: 1; max-width: 1520px; margin: 0 auto; padding: 0 28px 100px; }
+
+/* ── HEADER ── */
+header {
+  padding: 36px 0 28px;
+  display: flex; align-items: center; gap: 20px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 36px;
+}
+.logo-icon {
+  width: 50px; height: 50px;
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  border-radius: 14px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 22px; flex-shrink: 0;
+  box-shadow: 0 0 30px rgba(0,212,200,.25), 0 0 60px rgba(0,212,200,.1);
+}
+.header-text h1 {
+  font-family: 'Syne', sans-serif;
+  font-size: clamp(20px, 2.8vw, 30px);
+  font-weight: 800;
+  letter-spacing: -.5px;
+  background: linear-gradient(90deg, #fff 30%, var(--accent));
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+}
+.header-text p { color: var(--muted); font-size: 13px; margin-top: 4px; font-style: italic; }
+.header-badges { margin-left: auto; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.badge {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 5px 12px;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 10px; color: var(--accent);
+  white-space: nowrap;
+}
+
+/* ── MAIN GRID ── */
+.main-grid {
+  display: grid;
+  grid-template-columns: 400px 1fr;
+  gap: 24px;
+  align-items: start;
+}
+@media(max-width:980px){ .main-grid { grid-template-columns:1fr; } }
+
+/* ── PANELS ── */
+.panel {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  padding: 24px 26px;
+}
+.panel-title {
+  font-family: 'Syne', sans-serif;
+  font-size: 11px; font-weight: 700;
+  letter-spacing: 1.8px; text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 20px;
+  display: flex; align-items: center; gap: 8px;
+}
+.panel-title::before {
+  content: '';
+  width: 3px; height: 13px;
+  background: linear-gradient(var(--accent), var(--accent2));
+  border-radius: 2px;
+}
+.panel-title .title-badge {
+  margin-left: auto;
+  font-size: 9px;
+  padding: 2px 8px;
+  background: rgba(0,212,200,.08);
+  border: 1px solid rgba(0,212,200,.2);
+  border-radius: 999px;
+  color: var(--accent);
+}
+
+/* ── FEATURE SLIDERS ── */
+.feat-group { margin-bottom: 22px; }
+.feat-group-label {
+  font-size: 10px; font-weight: 600;
+  letter-spacing: 1.8px; text-transform: uppercase;
+  color: var(--accent2);
+  margin-bottom: 12px;
+  padding-bottom: 7px;
+  border-bottom: 1px solid var(--border);
+}
+.feat-row {
+  display: flex; align-items: center; gap: 10px;
+  margin-bottom: 10px;
+}
+.feat-label {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 10.5px; color: var(--muted);
+  width: 124px; flex-shrink: 0;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.feat-slider {
+  flex: 1;
+  -webkit-appearance: none; appearance: none;
+  height: 3px;
+  background: var(--surface2);
+  border-radius: 4px; outline: none; cursor: pointer;
+}
+.feat-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 13px; height: 13px; border-radius: 50%;
+  background: var(--accent); cursor: pointer;
+  box-shadow: 0 0 8px rgba(0,212,200,.5);
+  transition: transform .15s;
+}
+.feat-slider::-webkit-slider-thumb:hover { transform: scale(1.35); }
+.feat-val {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 11px; font-weight: 500;
+  color: var(--text); width: 52px; text-align: right;
+}
+
+/* Toggle */
+.toggle-row { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; }
+.toggle-label { font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; color: var(--muted); flex: 1; }
+.toggle-wrap { position: relative; width: 44px; height: 24px; }
+.toggle-wrap input { opacity: 0; width: 0; height: 0; }
+.toggle-slider {
+  position: absolute; cursor: pointer; inset: 0;
+  background: var(--surface2); border: 1px solid var(--border); border-radius: 24px;
+  transition: background .3s;
+}
+.toggle-slider::after {
+  content: ''; position: absolute; left: 3px; top: 3px;
+  width: 16px; height: 16px;
+  background: var(--muted); border-radius: 50%;
+  transition: transform .3s, background .3s;
+}
+.toggle-wrap input:checked + .toggle-slider { background: rgba(0,212,200,.15); border-color: var(--accent); }
+.toggle-wrap input:checked + .toggle-slider::after { transform: translateX(20px); background: var(--accent); }
+.toggle-val { font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: var(--text); width: 20px; }
+
+/* Buttons */
+.btn-row { display: flex; gap: 10px; margin-top: 24px; }
+.btn {
+  flex: 1; padding: 13px; border-radius: 10px;
+  font-family: 'Syne', sans-serif; font-size: 14px; font-weight: 700;
+  cursor: pointer; border: none; transition: all .2s; letter-spacing: .3px;
+}
+.btn-primary {
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  color: #fff; box-shadow: 0 4px 20px rgba(0,212,200,.25);
+}
+.btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(0,212,200,.4); }
+.btn-primary:active { transform: translateY(0); }
+.btn-primary:disabled { opacity: .5; cursor: not-allowed; transform: none; }
+.btn-ghost {
+  background: var(--surface2); color: var(--muted);
+  border: 1px solid var(--border);
+}
+.btn-ghost:hover { color: var(--text); border-color: rgba(255,255,255,.15); }
+.spinner {
+  display: none; width: 16px; height: 16px;
+  border: 2px solid rgba(255,255,255,.2); border-top-color: #fff;
+  border-radius: 50%; animation: spin .6s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+.btn-primary.loading .btn-text { display: none; }
+.btn-primary.loading .spinner { display: block; margin: 0 auto; }
+
+/* ── RESULTS ── */
+#results-panel { display: none; flex-direction: column; gap: 20px; }
+#results-panel.visible { display: flex; animation: fadeUp .4s ease; }
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ── CLUSTER HERO ── */
+.cluster-hero {
+  border-radius: var(--r); padding: 26px 30px;
+  position: relative; overflow: hidden;
+  border: 1px solid rgba(255,255,255,.08);
+}
+.cluster-hero::before {
+  content: '';
+  position: absolute; inset: 0;
+  background: linear-gradient(135deg, var(--cl-color, var(--accent)) 0%, transparent 60%);
+  opacity: .1; pointer-events: none;
+}
+.cluster-hero::after {
+  content: attr(data-cluster-num);
+  position: absolute; right: 24px; top: 50%; transform: translateY(-50%);
+  font-family: 'Syne', sans-serif;
+  font-size: 110px; font-weight: 800;
+  color: var(--cl-color, var(--accent));
+  opacity: .05; line-height: 1; pointer-events: none;
+}
+.cluster-top { display: flex; align-items: flex-start; gap: 16px; }
+.cluster-icon {
+  width: 52px; height: 52px; border-radius: 14px;
+  background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.1);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 24px; flex-shrink: 0;
+}
+.cluster-meta h2 {
+  font-family: 'Syne', sans-serif;
+  font-size: 21px; font-weight: 800; margin-bottom: 3px;
+}
+.cluster-sub { color: var(--muted); font-size: 12px; font-style: italic; }
+.risk-badge {
+  margin-left: auto; padding: 5px 14px; border-radius: 999px;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 10px; font-weight: 500;
+  text-transform: uppercase; letter-spacing: 1.2px; flex-shrink: 0;
+}
+.cluster-desc { margin-top: 14px; font-size: 14px; line-height: 1.7; color: #b0bdd6; }
+.cluster-traits { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 14px; }
+.trait-pill {
+  padding: 4px 12px; border-radius: 999px; font-size: 11px;
+  background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.08);
+  color: var(--muted2);
+}
+
+/* ── CLUSTER ID STAT (single stat, centered) ── */
+.cluster-id-bar {
+  display: flex; align-items: center; gap: 16px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  padding: 18px 24px;
+}
+.cid-label { font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; }
+.cid-val {
+  font-family: 'Syne', sans-serif; font-size: 28px; font-weight: 800;
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+}
+.cid-sep { width: 1px; height: 36px; background: var(--border); }
+.cid-cluster-name { font-family: 'DM Sans', sans-serif; font-size: 14px; color: var(--text); font-weight: 500; }
+.cid-risk-inline {
+  margin-left: auto;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 10px; letter-spacing: 1px; text-transform: uppercase;
+  padding: 4px 10px; border-radius: 999px;
+}
+
+/* ── CHARTS ROW (2 across) ── */
+.charts-row { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+@media(max-width:760px){ .charts-row { grid-template-columns: 1fr; } }
+
+/* ── CHARTS ROW 3 (3 across) ── */
+.charts-row-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; }
+@media(max-width:1100px){ .charts-row-3 { grid-template-columns: 1fr 1fr; } }
+@media(max-width:700px){ .charts-row-3 { grid-template-columns: 1fr; } }
+
+.chart-wrap { position: relative; }
+.chart-canvas-wrap { height: 260px; display: flex; align-items: center; justify-content: center; position: relative; }
+.chart-subtitle { font-size: 11px; color: var(--muted); margin-bottom: 12px; margin-top: -8px; font-style: italic; }
+
+/* ── PROBABILITY BARS ── */
+.prob-grid { display: flex; flex-direction: column; gap: 10px; }
+.prob-row { display: flex; align-items: center; gap: 10px; }
+.prob-name { font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; color: var(--muted); width: 116px; flex-shrink: 0; }
+.prob-bar-track {
+  flex: 1; height: 7px; background: var(--surface2);
+  border-radius: 4px; overflow: hidden; position: relative;
+}
+.prob-bar-fill { height: 100%; border-radius: 4px; transition: width .9s cubic-bezier(.16,1,.3,1); }
+.prob-pct { font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; color: var(--muted); width: 36px; text-align: right; }
+.prob-row.is-assigned .prob-name { color: var(--text); font-weight: 500; }
+.prob-row.is-assigned .prob-pct { color: var(--text); font-weight: 500; }
+
+/* ── FEATURE IMPORTANCE TABLE ── */
+.feat-importance-grid { display: flex; flex-direction: column; gap: 7px; }
+.fi-row { display: flex; align-items: center; gap: 10px; }
+.fi-rank { font-family: 'IBM Plex Mono', monospace; font-size: 9px; color: var(--muted); width: 16px; text-align: right; flex-shrink: 0; }
+.fi-name { font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; color: var(--muted2); width: 130px; flex-shrink: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.fi-bar-track { flex: 1; height: 6px; background: var(--surface2); border-radius: 3px; overflow: hidden; }
+.fi-bar-fill { height: 100%; border-radius: 3px; transition: width .9s cubic-bezier(.16,1,.3,1); }
+.fi-dir {
+  font-family: 'IBM Plex Mono', monospace; font-size: 9px;
+  width: 34px; text-align: right; flex-shrink: 0;
+  letter-spacing: .5px;
+}
+.fi-dir.pos { color: var(--accent); }
+.fi-dir.neg { color: var(--risk-critical); }
+
+/* ── DECISION PATH ── */
+.decision-path { display: flex; flex-direction: column; gap: 0; }
+.dp-step {
+  display: flex; gap: 14px; align-items: flex-start;
+  padding-bottom: 16px;
+  position: relative;
+}
+.dp-step:not(:last-child)::after {
+  content: '';
+  position: absolute; left: 14px; top: 30px;
+  width: 2px; bottom: 0;
+  background: linear-gradient(var(--border2), transparent);
+}
+.dp-dot {
+  width: 28px; height: 28px; border-radius: 50%; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px; font-weight: 700;
+  font-family: 'IBM Plex Mono', monospace;
+  border: 1px solid var(--border2);
+  background: var(--surface2);
+}
+.dp-body {}
+.dp-title { font-size: 13px; font-weight: 600; color: var(--text); margin-bottom: 2px; }
+.dp-detail { font-size: 12px; color: var(--muted); line-height: 1.5; }
+.dp-val { font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: var(--accent); }
+
+/* ── RECOMMENDATION CARDS ── */
+.rec-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+@media(max-width:760px){ .rec-grid { grid-template-columns: 1fr; } }
+.rec-card {
+  padding: 16px; border-radius: 10px;
+  background: var(--surface2); border: 1px solid var(--border);
+  display: flex; gap: 12px; align-items: flex-start;
+}
+.rec-card.urgent { border-color: rgba(248,113,113,.3); background: rgba(248,113,113,.05); }
+.rec-card.high   { border-color: rgba(251,146,60,.3);  background: rgba(251,146,60,.05); }
+.rec-card.medium { border-color: rgba(251,191,36,.25); background: rgba(251,191,36,.04); }
+.rec-card.low    { border-color: rgba(52,211,153,.2);  background: rgba(52,211,153,.04); }
+.rec-icon { font-size: 18px; flex-shrink: 0; margin-top: 1px; }
+.rec-body {}
+.rec-priority {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 9px; letter-spacing: 1px; text-transform: uppercase;
+  margin-bottom: 4px; font-weight: 600;
+}
+.rec-priority.urgent { color: var(--risk-critical); }
+.rec-priority.high   { color: var(--risk-high); }
+.rec-priority.medium { color: var(--risk-med); }
+.rec-priority.low    { color: var(--risk-low); }
+.rec-text { font-size: 12.5px; line-height: 1.55; color: var(--muted2); }
+
+/* ── COMPARISON TABLE ── */
+.comparison-table { width: 100%; border-collapse: collapse; }
+.comparison-table th {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 9.5px; text-transform: uppercase; letter-spacing: 1px;
+  color: var(--muted); padding: 8px 12px; text-align: left;
+  border-bottom: 1px solid var(--border);
+}
+.comparison-table td {
+  padding: 8px 12px; font-size: 12px; border-bottom: 1px solid rgba(255,255,255,.03);
+  color: var(--muted2);
+  font-family: 'IBM Plex Mono', monospace; font-size: 11px;
+}
+.comparison-table tr.highlight td { background: rgba(0,212,200,.04); color: var(--text); }
+.comparison-table tr.highlight td:first-child { color: var(--accent); font-weight: 500; }
+.dev-bar-pos { display: inline-block; height: 5px; background: var(--accent); border-radius: 2px; vertical-align: middle; margin-left: 6px; }
+.dev-bar-neg { display: inline-block; height: 5px; background: var(--risk-critical); border-radius: 2px; vertical-align: middle; margin-left: 6px; }
+
+/* ── INSIGHT PILLS ROW ── */
+.insight-pills { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 4px; }
+.insight-pill {
+  padding: 6px 14px; border-radius: 999px; font-size: 12px;
+  display: flex; align-items: center; gap: 6px;
+}
+.insight-pill.positive { background: rgba(52,211,153,.1); border: 1px solid rgba(52,211,153,.25); color: #34d399; }
+.insight-pill.warning  { background: rgba(251,191,36,.1); border: 1px solid rgba(251,191,36,.25); color: #fbbf24; }
+.insight-pill.critical { background: rgba(248,113,113,.1); border: 1px solid rgba(248,113,113,.25); color: #f87171; }
+.insight-pill.neutral  { background: rgba(96,165,250,.1); border: 1px solid rgba(96,165,250,.25); color: #60a5fa; }
+
+/* ── SECTION DIVIDER ── */
+.section-divider {
+  font-family: 'Syne', sans-serif; font-size: 11px; font-weight: 700;
+  letter-spacing: 2px; text-transform: uppercase;
+  color: var(--muted); padding: 6px 0;
+  display: flex; align-items: center; gap: 12px;
+}
+.section-divider::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+/* ── PLACEHOLDER ── */
+.results-placeholder {
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  min-height: 400px; text-align: center;
+  color: var(--muted); border: 1px dashed var(--border);
+  border-radius: var(--r); gap: 14px;
+}
+.placeholder-icon { display:flex; align-items:center; justify-content:center; width:64px; height:64px; }
+.placeholder-text { font-size: 15px; opacity: .6; }
+.placeholder-hint { font-size: 11px; opacity: .35; font-family: 'IBM Plex Mono', monospace; }
+
+/* ── TOAST ── */
+.toast {
+  position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
+  background: #1e1a2e; border: 1px solid rgba(248,113,113,.4);
+  color: var(--risk-critical);
+  padding: 14px 20px; border-radius: 10px;
+  font-size: 13px; z-index: 100; display: none;
+  box-shadow: 0 4px 20px rgba(0,0,0,.5);
+  animation: fadeUp .3s ease;
+}
+.toast.show { display: block; }
+
+/* ── WATERFALL CHART ── */
+.waterfall-wrap { overflow-x: auto; }
+
+/* ── CLUSTER COMPASS ── */
+.cluster-compass-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+.compass-cell {
+  padding: 12px; border-radius: 8px;
+  background: var(--surface2); border: 1px solid var(--border);
+  text-align: center; transition: all .2s; cursor: default;
+}
+.compass-cell.active {
+  border-color: var(--cl-active-color, var(--accent));
+  background: rgba(0,212,200,.06);
+  box-shadow: 0 0 16px rgba(0,212,200,.1);
+}
+.compass-cell-icon { display:flex; align-items:center; justify-content:center; height:24px; margin-bottom:4px; }
+.compass-cell-name { font-size: 10px; color: var(--muted2); font-weight: 500; }
+.compass-cell-risk { font-family: 'IBM Plex Mono', monospace; font-size: 9px; color: var(--muted); margin-top: 2px; letter-spacing: .5px; }
+.compass-cell.active .compass-cell-name { color: var(--text); }
+
+</style>
+</head>
+<body>
+<div class="shell">
+
+<!-- HEADER -->
+<header>
+  <div class="logo-icon">
+    <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3.33 2 8.67 2 12 0v-5"/>
+    </svg>
+  </div>
+  <div class="header-text">
+    <h1>Student Cluster Intelligence</h1>
+    <p>Behavioural pattern analysis · Contrastive encoder + K-Means · SHAP interpretability</p>
+  </div>
+  <div class="header-badges">
+    <span class="badge">6 Clusters</span>
+    <span class="badge">SHAP XAI</span>
+    <span class="badge">Contrastive KMeans</span>
+  </div>
+</header>
+
+<!-- MAIN GRID -->
+<div class="main-grid">
+
+  <!-- LEFT: INPUT -->
+  <div>
+    <div class="panel">
+      <div class="panel-title">Student Profile Input</div>
+
+      <div class="feat-group">
+        <div class="feat-group-label">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;margin-right:5px;margin-bottom:1px"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>Academic
+        </div>
+        <div id="academic-feats"></div>
+      </div>
+      <div class="feat-group">
+        <div class="feat-group-label">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;margin-right:5px;margin-bottom:1px"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>Lifestyle
+        </div>
+        <div id="lifestyle-feats"></div>
+      </div>
+      <div class="feat-group">
+        <div class="feat-group-label">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;margin-right:5px;margin-bottom:1px"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>Wellbeing &amp; Cognition
+        </div>
+        <div id="wellbeing-feats"></div>
+      </div>
+      <div class="feat-group">
+        <div class="feat-group-label">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;margin-right:5px;margin-bottom:1px"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>Personal
+        </div>
+        <div id="personal-feats"></div>
+      </div>
+
+      <div class="btn-row">
+        <button class="btn btn-ghost" onclick="fillDemo()">Demo</button>
+        <button class="btn btn-primary" id="predictBtn" onclick="predict()">
+          <span class="btn-text">Predict Cluster →</span>
+          <div class="spinner"></div>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- RIGHT: RESULTS -->
+  <div id="right-col">
+
+    <!-- Placeholder -->
+    <div class="results-placeholder" id="placeholder">
+      <div class="placeholder-icon">
+        <svg width="52" height="52" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" style="opacity:.25"><circle cx="12" cy="12" r="10"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/><path d="M2 12h20"/></svg>
+      </div>
+      <div class="placeholder-text">Fill in a student profile and click Predict</div>
+      <div class="placeholder-hint">Pipeline: scaler → contrastive encoder → k-means → SHAP</div>
+    </div>
+
+    <!-- Results -->
+    <div id="results-panel">
+
+      <!-- 1. CLUSTER HERO -->
+      <div class="cluster-hero" id="clusterHero">
+        <div class="cluster-top">
+          <div class="cluster-icon" id="clusterIcon"></div>
+          <div class="cluster-meta">
+            <h2 id="clusterName"></h2>
+            <div class="cluster-sub" id="clusterShort"></div>
+          </div>
+          <div class="risk-badge" id="riskBadge"></div>
+        </div>
+        <div class="cluster-desc" id="clusterDesc"></div>
+        <div class="cluster-traits" id="clusterTraits"></div>
+      </div>
+
+      <!-- 2. CLUSTER ID BAR -->
+      <div class="cluster-id-bar" id="clusterIdBar">
+        <div>
+          <div class="cid-label">Assigned Cluster</div>
+          <div class="cid-val" id="cidVal">—</div>
+        </div>
+        <div class="cid-sep"></div>
+        <div class="cid-cluster-name" id="cidName">—</div>
+        <div class="cid-risk-inline" id="cidRiskInline">—</div>
+      </div>
+
+      <!-- 3. KEY INSIGHTS ROW -->
+      <div class="panel">
+        <div class="panel-title">Key Behavioural Insights <span class="title-badge">Auto-generated</span></div>
+        <div class="insight-pills" id="insightPills"></div>
+      </div>
+
+      <!-- 4. CHARTS ROW: Radar + SHAP -->
+      <div class="charts-row">
+        <div class="panel chart-wrap">
+          <div class="panel-title">Behavioural Radar</div>
+          <p class="chart-subtitle">Student vs cluster centroid — normalised to 0–100</p>
+          <div class="chart-canvas-wrap">
+            <canvas id="radarChart"></canvas>
+          </div>
+        </div>
+        <div class="panel chart-wrap">
+          <div class="panel-title">SHAP Feature Attribution <span class="title-badge">Top 12</span></div>
+          <p class="chart-subtitle">Teal = pushes toward this cluster · Red = pushes away</p>
+          <div class="chart-canvas-wrap">
+            <canvas id="shapChart"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <!-- 5. SECTION DIVIDER -->
+      <div class="section-divider">Cluster Landscape</div>
+
+      <!-- 6. CHARTS ROW: Probabilities + Cluster Compass + Deviation -->
+      <div class="charts-row-3">
+
+        <!-- Probability distribution -->
+        <div class="panel chart-wrap">
+          <div class="panel-title">Cluster Membership Likelihood</div>
+          <p class="chart-subtitle">Distance-based softmax probability per cluster</p>
+          <div style="margin-top:8px">
+            <div class="prob-grid" id="probGrid"></div>
+          </div>
+        </div>
+
+        <!-- Cluster Compass -->
+        <div class="panel">
+          <div class="panel-title">Cluster Compass</div>
+          <p class="chart-subtitle">All 6 archetypes at a glance</p>
+          <div class="cluster-compass-grid" id="clusterCompass"></div>
+        </div>
+
+        <!-- Feature deviation from centroid -->
+        <div class="panel chart-wrap">
+          <div class="panel-title">Profile vs Centroid Δ</div>
+          <p class="chart-subtitle">How this student deviates from the cluster average</p>
+          <div class="chart-canvas-wrap">
+            <canvas id="deviationChart"></canvas>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- 7. SECTION DIVIDER -->
+      <div class="section-divider">Interpretability Deep-Dive</div>
+
+      <!-- 8. Feature importance + Decision path -->
+      <div class="charts-row">
+
+        <div class="panel">
+          <div class="panel-title">SHAP Importance Ranking <span class="title-badge">Magnitude</span></div>
+          <p class="chart-subtitle">Features sorted by absolute SHAP — direction shown right</p>
+          <div style="margin-top:12px">
+            <div class="feat-importance-grid" id="featImportanceGrid"></div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-title">Classification Decision Path</div>
+          <p class="chart-subtitle">How the model arrived at this cluster assignment</p>
+          <div style="margin-top:12px">
+            <div class="decision-path" id="decisionPath"></div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- 9. Peer comparison table -->
+      <div class="panel">
+        <div class="panel-title">Peer Comparison — This Student vs All Cluster Centroids</div>
+        <p class="chart-subtitle" style="margin-bottom:12px">Highlighted row = assigned cluster · Values are cluster centroid means</p>
+        <div style="overflow-x:auto">
+          <table class="comparison-table" id="comparisonTable">
+            <thead></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- 10. SECTION DIVIDER -->
+      <div class="section-divider">Action Plan</div>
+
+      <!-- 11. Recommended Interventions -->
+      <div class="panel">
+        <div class="panel-title">Recommended Interventions &amp; Decision Support</div>
+        <p class="chart-subtitle" style="margin-bottom:16px">Evidence-based actions ranked by urgency — derived from cluster profile and SHAP attribution</p>
+        <div class="rec-grid" id="recGrid"></div>
+      </div>
+
+      <!-- 12. What-if insight -->
+      <div class="panel" id="whatIfPanel">
+        <div class="panel-title">What-If Guidance <span class="title-badge">Scenario</span></div>
+        <p class="chart-subtitle" style="margin-bottom:12px">Levers most likely to shift cluster assignment based on SHAP magnitude</p>
+        <div id="whatIfContent"></div>
+      </div>
+
+    </div><!-- /results-panel -->
+  </div><!-- /right-col -->
+</div><!-- /main-grid -->
+</div><!-- /shell -->
+
+<div class="toast" id="toast"></div>
+
+<script>
+const API = 'http://localhost:8000';
+
+// ── Feature config ────────────────────────────────────────────────────────────
+const FEAT_CONFIG = {
+  academic: [
+    { key:'study_hours',          label:'study_hours',         min:0,  max:20,  step:.5,  def:6.0,  unit:'h/d' },
+    { key:'self_study_hours',     label:'self_study_hrs',      min:0,  max:12,  step:.5,  def:3.0,  unit:'h/d' },
+    { key:'online_classes_hours', label:'online_class_hrs',    min:0,  max:25,  step:.5,  def:2.0,  unit:'h/d' },
+    { key:'exam_study_hours',     label:'exam_study_hrs',      min:0,  max:20,  step:.5,  def:7.0,  unit:'h' },
+    { key:'exam_score',           label:'exam_score',          min:0,  max:20,  step:.5,  def:14.0, unit:'/20' },
+  ],
+  lifestyle: [
+    { key:'sleep_hours',          label:'sleep_hours',         min:2,  max:12,  step:.5,  def:7.0,  unit:'h/n' },
+    { key:'exercise_minutes',     label:'exercise_min',        min:0,  max:150, step:5,   def:30.0, unit:'m/d' },
+    { key:'screen_time_hours',    label:'screen_time',         min:0,  max:20,  step:.5,  def:8.0,  unit:'h/d' },
+    { key:'social_media_hours',   label:'social_media',        min:0,  max:15,  step:.5,  def:3.0,  unit:'h/d' },
+    { key:'caffeine_intake',      label:'caffeine_mg',         min:0,  max:500, step:10,  def:100.0,unit:'mg' },
+  ],
+  wellbeing: [
+    { key:'mental_health_score',  label:'mental_health',       min:1,  max:10,  step:.1,  def:6.0,  unit:'/10' },
+    { key:'focus_index',          label:'focus_index',         min:1,  max:10,  step:.1,  def:6.0,  unit:'/10' },
+    { key:'burnout_level',        label:'burnout_level',       min:1,  max:10,  step:.1,  def:5.0,  unit:'/10' },
+    { key:'productivity_score',   label:'productivity',        min:1,  max:10,  step:.1,  def:6.0,  unit:'/10' },
+    { key:'stress_level',         label:'stress_level',        min:1,  max:10,  step:.1,  def:5.0,  unit:'/10' },
+  ],
+  personal: [
+    { key:'age',                  label:'age',                 min:17, max:30,  step:1,   def:20.0, unit:'yr' },
+  ],
+};
+
+// SVG icon helper — returns inline SVG string at given size
+function svgIcon(path, size=14, extra='') {
+  return `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;flex-shrink:0;${extra}">${path}</svg>`;
+}
+
+// Cluster icons — each a distinct SVG path
+const CLUSTER_SVG_PATHS = [
+  // C0 High-Achievement Strained — flame / trending-up
+  '<polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/>',
+  // C1 Balanced Healthy — leaf / check-circle
+  '<path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>',
+  // C2 Disciplined Struggling — tool / wrench
+  '<path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>',
+  // C3 Leisure — monitor / play
+  '<rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/>',
+  // C4 Burnout — alert-octagon
+  '<polygon points="7.86 2 16.14 2 22 7.86 22 16.14 16.14 22 7.86 22 2 16.14 2 7.86 7.86 2"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>',
+  // C5 Inconsistent — shuffle
+  '<polyline points="16 3 21 3 21 8"/><line x1="4" y1="20" x2="21" y2="3"/><polyline points="21 16 21 21 16 21"/><line x1="15" y1="15" x2="21" y2="21"/>',
+];
+
+function clusterSvg(c, size=18, color='currentColor') {
+  return `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="${color}" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${CLUSTER_SVG_PATHS[c]}</svg>`;
+}
+
+const CLUSTER_COLORS  = ['#fb923c','#34d399','#fbbf24','#60a5fa','#f87171','#c084fc'];
+const RISK_COLORS     = { low:'#34d399', medium:'#fbbf24', high:'#fb923c', critical:'#f87171' };
+
+const RISK_SVG = {
+  low:      '<polyline points="20 6 9 17 4 12"/>',                                    // check
+  medium:   '<circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>',  // info
+  high:     '<path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>',  // triangle warn
+  critical: '<polygon points="7.86 2 16.14 2 22 7.86 22 16.14 16.14 22 7.86 22 2 16.14 2 7.86 7.86 2"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>',  // octagon
+};
+
+const INTERV_SVG = {
+  urgent: '<polygon points="7.86 2 16.14 2 22 7.86 22 16.14 16.14 22 7.86 22 2 16.14 2 7.86 7.86 2"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>',
+  high:   '<path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>',
+  medium: '<circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>',
+  low:    '<circle cx="12" cy="12" r="10"/><polyline points="12 8 12 12 14 14"/>',
+};
+
+function riskSvg(risk, size=12) {
+  const c = RISK_COLORS[risk] || '#888';
+  return `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="${c}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;margin-right:4px;flex-shrink:0">${RISK_SVG[risk]||''}</svg>`;
+}
+
+function intervSvg(priority, size=16) {
+  const colors = { urgent:'#f87171', high:'#fb923c', medium:'#fbbf24', low:'#34d399' };
+  const c = colors[priority] || '#9aabcc';
+  return `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="${c}" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;margin-top:1px">${INTERV_SVG[priority]||''}</svg>`;
+}
+
+const RADAR_FEATS  = ['study_hours','sleep_hours','social_media_hours','exercise_minutes',
+                      'caffeine_intake','mental_health_score','focus_index',
+                      'burnout_level','productivity_score','stress_level'];
+const RADAR_MAX    = { study_hours:20, sleep_hours:12, social_media_hours:15, exercise_minutes:150,
+                       caffeine_intake:400, mental_health_score:10, focus_index:10,
+                       burnout_level:10, productivity_score:10, stress_level:10 };
+const RADAR_LABELS = ['Study','Sleep','Social','Exercise','Caffeine','Mental','Focus','Burnout','Productivity','Stress'];
+
+// Comparison key features shown in peer table
+const CMP_FEATS = ['study_hours','exam_score','sleep_hours','exercise_minutes',
+                   'social_media_hours','mental_health_score','burnout_level','stress_level'];
+
+// ── Build sliders ────────────────────────────────────────────────────────────
+function buildSliders() {
+  Object.entries(FEAT_CONFIG).forEach(([group, feats]) => {
+    const container = document.getElementById(`${group}-feats`);
+    if (!container) return;
+    feats.forEach(f => {
+      const row = document.createElement('div');
+      row.className = 'feat-row';
+      row.innerHTML = `
+        <span class="feat-label">${f.label}</span>
+        <input type="range" class="feat-slider"
+          id="slider_${f.key}" min="${f.min}" max="${f.max}" step="${f.step}" value="${f.def}"
+          oninput="updateVal('${f.key}', this.value)"/>
+        <span class="feat-val" id="val_${f.key}">${f.def}<span style="font-size:9px;color:var(--muted);margin-left:1px">${f.unit}</span></span>
+      `;
+      container.appendChild(row);
+    });
+  });
+  const pCont = document.getElementById('personal-feats');
+  const trow = document.createElement('div');
+  trow.className = 'toggle-row';
+  trow.innerHTML = `
+    <span class="toggle-label">intervention</span>
+    <label class="toggle-wrap">
+      <input type="checkbox" id="toggle_intervention" onchange="updateToggle(this)"/>
+      <span class="toggle-slider"></span>
+    </label>
+    <span class="toggle-val" id="val_intervention">0</span>
+  `;
+  pCont.appendChild(trow);
+}
+
+function updateVal(key, val) {
+  const cfg = Object.values(FEAT_CONFIG).flat().find(f => f.key === key);
+  const unit = cfg?.unit || '';
+  const el = document.getElementById(`val_${key}`);
+  const num = parseFloat(val);
+  el.innerHTML = `${num % 1 === 0 ? num : num.toFixed(1)}<span style='font-size:9px;color:var(--muted);margin-left:1px'>${unit}</span>`;
+}
+
+function updateToggle(cb) {
+  document.getElementById('val_intervention').textContent = cb.checked ? '1' : '0';
+}
+
+// ── Demo presets ─────────────────────────────────────────────────────────────
+const DEMOS = [
+  { study_hours:2, self_study_hours:0.3, online_classes_hours:0.2, exam_study_hours:1.1,
+    exam_score:7.5, sleep_hours:8, exercise_minutes:2, screen_time_hours:14,
+    social_media_hours:9.5, caffeine_intake:3, mental_health_score:4, focus_index:2,
+    burnout_level:2, productivity_score:2, stress_level:3, age:20, intervention:0 },
+  { study_hours:12, self_study_hours:7, online_classes_hours:2.5, exam_study_hours:15,
+    exam_score:16, sleep_hours:4, exercise_minutes:3, screen_time_hours:12,
+    social_media_hours:1, caffeine_intake:158, mental_health_score:2, focus_index:4,
+    burnout_level:9, productivity_score:4, stress_level:9, age:21, intervention:0 },
+  { study_hours:7, self_study_hours:4, online_classes_hours:2, exam_study_hours:9,
+    exam_score:11, sleep_hours:5, exercise_minutes:2, screen_time_hours:10,
+    social_media_hours:4.5, caffeine_intake:280, mental_health_score:2, focus_index:3,
+    burnout_level:10, productivity_score:3, stress_level:10, age:21, intervention:0 },
+];
+let demoIdx = 0;
+
+function fillDemo() {
+  const d = DEMOS[demoIdx % DEMOS.length]; demoIdx++;
+  Object.entries(d).forEach(([k, v]) => {
+    if (k === 'intervention') {
+      document.getElementById('toggle_intervention').checked = v === 1;
+      document.getElementById('val_intervention').textContent = v;
+      return;
+    }
+    const sl = document.getElementById(`slider_${k}`);
+    if (sl) { sl.value = v; updateVal(k, v); }
+  });
+}
+
+function collectValues() {
+  const out = {};
+  Object.values(FEAT_CONFIG).flat().forEach(f => {
+    const sl = document.getElementById(`slider_${f.key}`);
+    out[f.key] = parseFloat(sl?.value ?? f.def);
+  });
+  out.intervention = document.getElementById('toggle_intervention').checked ? 1 : 0;
+  return out;
+}
+
+// ── Charts state ──────────────────────────────────────────────────────────────
+let radarChart = null, shapChart = null, deviationChart = null;
+
+// ── Predict ───────────────────────────────────────────────────────────────────
+async function predict() {
+  const btn = document.getElementById('predictBtn');
+  btn.classList.add('loading'); btn.disabled = true;
+  try {
+    const payload = collectValues();
+    const res = await fetch(`${API}/predict`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+    if (!res.ok) { const e = await res.json(); throw new Error(e.detail || res.statusText); }
+    const data = await res.json();
+    renderResults(data, payload);
+  } catch(err) {
+    showToast('Error: ' + (err.message || 'Cannot reach backend — is uvicorn running on :8000?'));
+  } finally {
+    btn.classList.remove('loading'); btn.disabled = false;
+  }
+}
+
+// ── Main render ────────────────────────────────────────────────────────────────
+function renderResults(data, input) {
+  document.getElementById('placeholder').style.display = 'none';
+  const rp = document.getElementById('results-panel');
+  rp.classList.remove('visible');
+  void rp.offsetWidth;
+  rp.classList.add('visible');
+
+  const c     = data.cluster_id;
+  const info  = data.cluster_info;
+  const color = CLUSTER_COLORS[c];
+  const cid   = String(c);
+
+  // ── Hero ──
+  const hero = document.getElementById('clusterHero');
+  hero.style.setProperty('--cl-color', color);
+  hero.setAttribute('data-cluster-num', c);
+  document.getElementById('clusterIcon').innerHTML  = clusterSvg(c, 26, color);
+  document.getElementById('clusterName').textContent  = info.name;
+  document.getElementById('clusterName').style.color  = color;
+  document.getElementById('clusterShort').textContent = `Cluster ${c} · Behavioural archetype`;
+  document.getElementById('clusterDesc').textContent  = info.description;
+  const rb = document.getElementById('riskBadge');
+  const rc = RISK_COLORS[info.risk] || '#888';
+  rb.innerHTML = riskSvg(info.risk, 11) + info.risk.toUpperCase();
+  rb.style.cssText = `color:${rc};background:${rc}22;border:1px solid ${rc}55;`;
+  document.getElementById('clusterTraits').innerHTML = info.traits.map(t =>
+    `<span class="trait-pill">${t}</span>`).join('');
+
+  // ── Cluster ID bar ──
+  document.getElementById('cidVal').textContent    = `C${c}`;
+  document.getElementById('cidName').textContent   = info.name;
+  const cri = document.getElementById('cidRiskInline');
+  cri.textContent = info.risk.toUpperCase();
+  cri.style.cssText = `color:${rc};background:${rc}15;border:1px solid ${rc}40;`;
+
+  // ── Insights ──
+  renderInsights(data, input, color);
+
+  // ── Cluster compass ──
+  renderClusterCompass(data, c);
+
+  // ── Radar ──
+  renderRadar(data, input, color);
+
+  // ── SHAP bar ──
+  renderShap(data, color);
+
+  // ── Prob grid ──
+  renderProbGrid(data, c);
+
+  // ── Deviation chart ──
+  renderDeviation(data, input, color);
+
+  // ── Feature importance ──
+  renderFeatImportance(data, color);
+
+  // ── Decision path ──
+  renderDecisionPath(data, input, color, rc);
+
+  // ── Comparison table ──
+  renderComparisonTable(data, input, c);
+
+  // ── Recommendations ──
+  renderRecommendations(info);
+
+  // ── What-if ──
+  renderWhatIf(data, input, c);
+}
+
+// ── Insights pills ────────────────────────────────────────────────────────────
+function renderInsights(data, input, color) {
+  const pills = [];
+  const r = data.cluster_info.risk;
+
+  // Academic performance
+  const targetSvg   = svgIcon('<circle cx="12" cy="12" r="10"/><polyline points="16 12 12 8 8 12"/><line x1="12" y1="16" x2="12" y2="8"/>', 12);
+  const trendDnSvg  = svgIcon('<polyline points="23 18 13.5 8.5 8.5 13.5 1 6"/><polyline points="17 18 23 18 23 12"/>', 12);
+  const sleepSvg    = svgIcon('<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>', 12);
+  const warnSvg     = svgIcon('<path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>', 12);
+  const checkSvg    = svgIcon('<polyline points="20 6 9 17 4 12"/>', 12);
+  const brainSvg    = svgIcon('<path d="M9.5 2A2.5 2.5 0 0 1 12 4.5v15a2.5 2.5 0 0 1-4.96-.46 2.5 2.5 0 0 1-2.96-3.08 3 3 0 0 1-.34-5.58 2.5 2.5 0 0 1 1.32-4.24 2.5 2.5 0 0 1 1.98-3A2.5 2.5 0 0 1 9.5 2z"/><path d="M14.5 2A2.5 2.5 0 0 0 12 4.5v15a2.5 2.5 0 0 0 4.96-.46 2.5 2.5 0 0 0 2.96-3.08 3 3 0 0 0 .34-5.58 2.5 2.5 0 0 0-1.32-4.24 2.5 2.5 0 0 0-1.98-3A2.5 2.5 0 0 0 14.5 2z"/>', 12);
+  const phoneSvg    = svgIcon('<rect x="5" y="2" width="14" height="20" rx="2" ry="2"/><line x1="12" y1="18" x2="12.01" y2="18"/>', 12);
+  const actSvg      = svgIcon('<polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>', 12);
+  const sedentSvg   = svgIcon('<rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>', 12);
+  const stressSvg   = svgIcon('<circle cx="12" cy="12" r="10"/><path d="M16 16s-1.5-2-4-2-4 2-4 2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/>', 12);
+  const caffSvg     = svgIcon('<path d="M18 8h1a4 4 0 0 1 0 8h-1"/><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/>', 12);
+  const loopSvg     = svgIcon('<polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/>', 12);
+  const medSvg      = svgIcon('<path d="M22 12h-4l-3 9L9 3l-3 9H2"/>', 12);
+
+  if (input.exam_score >= 18)        pills.push({ type:'positive', label: targetSvg  + ' High exam performance ('+input.exam_score+'/25)' });
+  else if (input.exam_score < 10)    pills.push({ type:'critical', label: trendDnSvg + ' Low exam score ('+input.exam_score+'/25)' });
+
+  if (input.sleep_hours >= 7)        pills.push({ type:'positive', label: sleepSvg   + ' Good sleep ('+input.sleep_hours+'h)' });
+  else if (input.sleep_hours < 5)    pills.push({ type:'critical', label: warnSvg    + ' Sleep deprived ('+input.sleep_hours+'h)' });
+
+  if (input.burnout_level >= 8)      pills.push({ type:'critical', label: warnSvg    + ' High burnout risk ('+input.burnout_level+'/10)' });
+  else if (input.burnout_level <= 3) pills.push({ type:'positive', label: checkSvg   + ' Low burnout ('+input.burnout_level+'/10)' });
+
+  if (input.mental_health_score <= 3)     pills.push({ type:'critical', label: brainSvg  + ' Mental health flag ('+input.mental_health_score+'/10)' });
+  else if (input.mental_health_score >= 8) pills.push({ type:'positive', label: checkSvg  + ' Strong mental health ('+input.mental_health_score+'/10)' });
+
+  if (input.social_media_hours > input.study_hours) pills.push({ type:'warning', label: phoneSvg + ' Social media exceeds study time' });
+
+  if (input.exercise_minutes >= 60)  pills.push({ type:'positive', label: actSvg    + ' Active lifestyle ('+input.exercise_minutes+'min/d)' });
+  else if (input.exercise_minutes <= 5) pills.push({ type:'warning', label: sedentSvg + ' Sedentary lifestyle' });
+
+  if (input.stress_level >= 8)       pills.push({ type:'critical', label: stressSvg + ' Extreme stress ('+input.stress_level+'/10)' });
+  if (input.caffeine_intake >= 300)  pills.push({ type:'warning',  label: caffSvg   + ' High caffeine ('+input.caffeine_intake+'mg)' });
+
+  if (input.focus_index >= 7 && input.productivity_score <= 4)
+    pills.push({ type:'warning', label: loopSvg + ' High focus, low output — possible inefficiency' });
+
+  if (input.intervention) pills.push({ type:'neutral', label: medSvg + ' Intervention active' });
+
+  const container = document.getElementById('insightPills');
+  container.innerHTML = pills.slice(0, 10).map(p =>
+    `<span class="insight-pill ${p.type}">${p.label}</span>`
+  ).join('');
+}
+
+// ── Cluster compass ───────────────────────────────────────────────────────────
+function renderClusterCompass(data, assignedC) {
+  const allInfo = data.all_cluster_info;
+  const grid = document.getElementById('clusterCompass');
+  grid.innerHTML = Object.keys(allInfo).map(k => {
+    const inf = allInfo[k];
+    const isActive = parseInt(k) === assignedC;
+    const col = CLUSTER_COLORS[parseInt(k)];
+    return `
+      <div class="compass-cell${isActive ? ' active' : ''}" style="${isActive ? '--cl-active-color:'+col : ''}">
+        <div class="compass-cell-icon">${clusterSvg(parseInt(k), 20, isActive ? col : '#6b7a99')}</div>
+        <div class="compass-cell-name">${inf.short}</div>
+        <div class="compass-cell-risk" style="color:${RISK_COLORS[inf.risk]}">${inf.risk}</div>
+      </div>
+    `;
+  }).join('');
+}
+
+// ── Prob grid ─────────────────────────────────────────────────────────────────
+function renderProbGrid(data, assignedC) {
+  const grid = document.getElementById('probGrid');
+  grid.innerHTML = '';
+  data.all_probabilities.forEach((p, i) => {
+    const inf   = data.all_cluster_info[String(i)];
+    const col   = CLUSTER_COLORS[i];
+    const pct   = Math.round(p * 100);
+    const isTop = i === assignedC;
+    const row   = document.createElement('div');
+    row.className = 'prob-row' + (isTop ? ' is-assigned' : '');
+    row.innerHTML = `
+      <span class="prob-name" style="display:flex;align-items:center;gap:5px">${clusterSvg(i, 12, col)}<span style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${inf.short}</span></span>
+      <div class="prob-bar-track">
+        <div class="prob-bar-fill" style="width:0%;background:${col}" data-w="${pct}"></div>
+      </div>
+      <span class="prob-pct">${pct}%</span>
+    `;
+    grid.appendChild(row);
+  });
+  requestAnimationFrame(() => {
+    grid.querySelectorAll('.prob-bar-fill').forEach(el => {
+      el.style.width = el.dataset.w + '%';
+    });
+  });
+}
+
+// ── Radar chart ──────────────────────────────────────────────────────────────
+function renderRadar(data, input, color) {
+  const feats    = data.feature_names;
+  const centroid = data.cluster_centroid;
+  const inputArr = data.input_values;
+
+  const studentNorm  = RADAR_FEATS.map(f => {
+    const idx = feats.indexOf(f);
+    return idx >= 0 ? Math.min(1, Math.max(0, inputArr[idx] / RADAR_MAX[f])) : 0;
+  });
+  const centroidNorm = RADAR_FEATS.map(f => {
+    const idx = feats.indexOf(f);
+    return idx >= 0 ? Math.min(1, Math.max(0, centroid[idx] / RADAR_MAX[f])) : 0;
+  });
+
+  if (radarChart) { radarChart.destroy(); radarChart = null; }
+  const ctx = document.getElementById('radarChart').getContext('2d');
+  radarChart = new Chart(ctx, {
+    type: 'radar',
+    data: {
+      labels: RADAR_LABELS,
+      datasets: [
+        {
+          label: 'This Student',
+          data: studentNorm.map(v => +(v * 100).toFixed(1)),
+          borderColor: color,
+          backgroundColor: color + '20',
+          pointBackgroundColor: color,
+          pointRadius: 4, borderWidth: 2,
+        },
+        {
+          label: 'Cluster Centroid',
+          data: centroidNorm.map(v => +(v * 100).toFixed(1)),
+          borderColor: 'rgba(255,255,255,.3)',
+          backgroundColor: 'rgba(255,255,255,.03)',
+          pointBackgroundColor: 'rgba(255,255,255,.4)',
+          pointRadius: 3, borderWidth: 1.5, borderDash: [4,3],
+        },
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      scales: {
+        r: {
+          min: 0, max: 100,
+          grid:       { color: 'rgba(255,255,255,.05)' },
+          angleLines: { color: 'rgba(255,255,255,.05)' },
+          ticks: { display: false, stepSize: 25 },
+          pointLabels: { color: '#6b7a99', font: { family:"'IBM Plex Mono'", size: 9 } },
+        }
+      },
+      plugins: {
+        legend: { labels: { color:'#6b7a99', font:{ family:"'DM Sans'", size:10 }, usePointStyle:true, pointStyleWidth:8 } },
+        tooltip: { callbacks: { label: c => ` ${c.dataset.label}: ${c.raw.toFixed(0)}%` } }
+      },
+      animation: { duration: 800, easing: 'easeOutQuart' },
+    }
+  });
+}
+
+// ── SHAP bar ─────────────────────────────────────────────────────────────────
+function renderShap(data, clusterColor) {
+  const feats = data.feature_names;
+  const shap  = data.shap_values;
+
+  const pairs = feats.map((f, i) => ({ f, v: shap[i] }))
+    .sort((a, b) => Math.abs(b.v) - Math.abs(a.v))
+    .slice(0, 12);
+
+  const labels = pairs.map(p => p.f.replace(/_/g, ' '));
+  const vals   = pairs.map(p => +p.v.toFixed(4));
+  const colors = vals.map(v => v >= 0 ? 'rgba(0,212,200,.72)' : 'rgba(248,113,113,.72)');
+  const borders= vals.map(v => v >= 0 ? '#00d4c8' : '#f87171');
+
+  if (shapChart) { shapChart.destroy(); shapChart = null; }
+  const ctx = document.getElementById('shapChart').getContext('2d');
+  shapChart = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [{ label:'SHAP value', data:vals, backgroundColor:colors, borderColor:borders, borderWidth:1, borderRadius:3 }]
+    },
+    options: {
+      indexAxis: 'y', responsive: true, maintainAspectRatio: false,
+      scales: {
+        x: { grid:{ color:'rgba(255,255,255,.04)' }, ticks:{ color:'#6b7a99', font:{ family:"'IBM Plex Mono'", size:9 } }, border:{ color:'transparent' } },
+        y: { grid:{ display:false }, ticks:{ color:'#9aabcc', font:{ family:"'IBM Plex Mono'", size:9 } }, border:{ color:'transparent' } }
+      },
+      plugins: {
+        legend: { display:false },
+        tooltip: { callbacks: { label: c => ` SHAP: ${c.raw > 0 ? '+' : ''}${c.raw.toFixed(4)}` } }
+      },
+      animation: { duration: 700, easing: 'easeOutQuart' },
+    }
+  });
+}
+
+// ── Deviation chart ───────────────────────────────────────────────────────────
+function renderDeviation(data, input, color) {
+  const feats    = data.feature_names;
+  const centroid = data.cluster_centroid;
+  const inputArr = data.input_values;
+
+  const devFeats = RADAR_FEATS;
+  const labels   = RADAR_LABELS;
+
+  const deviations = devFeats.map(f => {
+    const idx = feats.indexOf(f);
+    if (idx < 0) return 0;
+    const mx = RADAR_MAX[f] || 1;
+    return +((( inputArr[idx] - centroid[idx]) / mx) * 100).toFixed(1);
+  });
+
+  const bgColors  = deviations.map(v => v >= 0 ? 'rgba(0,212,200,.65)' : 'rgba(248,113,113,.65)');
+  const brdColors = deviations.map(v => v >= 0 ? '#00d4c8' : '#f87171');
+
+  if (deviationChart) { deviationChart.destroy(); deviationChart = null; }
+  const ctx = document.getElementById('deviationChart').getContext('2d');
+  deviationChart = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [{
+        label: '% deviation from centroid',
+        data: deviations,
+        backgroundColor: bgColors, borderColor: brdColors,
+        borderWidth: 1, borderRadius: 3,
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      scales: {
+        x: { grid:{ display:false }, ticks:{ color:'#6b7a99', font:{ family:"'IBM Plex Mono'", size:8.5 } }, border:{ color:'transparent' } },
+        y: {
+          grid: { color:'rgba(255,255,255,.04)' },
+          ticks:{ color:'#6b7a99', font:{ family:"'IBM Plex Mono'", size:9 },
+                  callback: v => (v > 0 ? '+' : '') + v + '%' },
+          border:{ color:'transparent' },
+        }
+      },
+      plugins: {
+        legend: { display:false },
+        tooltip: { callbacks: { label: c => ` ${c.raw > 0 ? '+' : ''}${c.raw}% vs centroid` } }
+      },
+      animation: { duration: 700, easing: 'easeOutQuart' },
+    }
+  });
+}
+
+// ── Feature importance table ─────────────────────────────────────────────────
+function renderFeatImportance(data, color) {
+  const feats = data.feature_names;
+  const shap  = data.shap_values;
+
+  const pairs = feats.map((f, i) => ({ f, v: shap[i] }))
+    .sort((a, b) => Math.abs(b.v) - Math.abs(a.v))
+    .slice(0, 14);
+
+  const maxAbs = Math.max(...pairs.map(p => Math.abs(p.v)));
+
+  const container = document.getElementById('featImportanceGrid');
+  container.innerHTML = pairs.map((p, i) => {
+    const pct  = Math.round((Math.abs(p.v) / maxAbs) * 100);
+    const dir  = p.v >= 0 ? 'pos' : 'neg';
+    const dirLabel = p.v >= 0 ? '+push' : '−pull';
+    const barColor = p.v >= 0 ? '#00d4c8' : '#f87171';
+    return `
+      <div class="fi-row">
+        <span class="fi-rank">${i+1}</span>
+        <span class="fi-name">${p.f.replace(/_/g,' ')}</span>
+        <div class="fi-bar-track">
+          <div class="fi-bar-fill" style="width:${pct}%;background:${barColor}"></div>
+        </div>
+        <span class="fi-dir ${dir}">${dirLabel}</span>
+      </div>
+    `;
+  }).join('');
+}
+
+// ── Decision path ────────────────────────────────────────────────────────────
+function renderDecisionPath(data, input, color, riskColor) {
+  const feats = data.feature_names;
+  const shap  = data.shap_values;
+  const c     = data.cluster_id;
+  const info  = data.cluster_info;
+
+  // Top 3 positive and top 1 negative SHAP
+  const sorted = feats.map((f,i) => ({ f, v: shap[i] })).sort((a,b) => b.v - a.v);
+  const topPos = sorted.slice(0,3);
+  const topNeg = sorted.slice(-1)[0];
+
+  const pct = Math.round(data.all_probabilities[c] * 100);
+
+  const steps = [
+    {
+      dot: '1',
+      color: color,
+      title: 'Input Normalised & Encoded',
+      detail: `16 features scaled → Contrastive encoder projects to latent space`
+    },
+    {
+      dot: '2',
+      color: '#7c6aff',
+      title: 'Nearest Cluster Found',
+      detail: `K-Means: closest centroid = <span class="dp-val">Cluster ${c} (${info.name})</span>`
+    },
+    {
+      dot: '3',
+      color: '#00d4c8',
+      title: 'Top Driving Features',
+      detail: topPos.map(p => `<span class="dp-val">${p.f.replace(/_/g,' ')}</span> pushed toward C${c}`).join(' · ')
+    },
+    {
+      dot: '4',
+      color: '#fbbf24',
+      title: 'Opposing Signal',
+      detail: `<span class="dp-val">${topNeg.f.replace(/_/g,' ')}</span> pulled away from C${c} (SHAP ${topNeg.v.toFixed(4)})`
+    },
+    {
+      dot: '5',
+      color: riskColor,
+      title: `Final Assignment — Risk: ${info.risk.toUpperCase()}`,
+      detail: `Softmax membership probability <span class="dp-val">${pct}%</span> · ${info.traits.join(' · ')}`
+    },
+  ];
+
+  const container = document.getElementById('decisionPath');
+  container.innerHTML = steps.map(s => `
+    <div class="dp-step">
+      <div class="dp-dot" style="border-color:${s.color}44;color:${s.color}">${s.dot}</div>
+      <div class="dp-body">
+        <div class="dp-title" style="color:${s.color}">${s.title}</div>
+        <div class="dp-detail">${s.detail}</div>
+      </div>
+    </div>
+  `).join('');
+}
+
+// ── Peer comparison table ─────────────────────────────────────────────────────
+// Cluster centroid profiles (from cluster_profiles.json — embedded for client-side use)
+const CLUSTER_PROFILES = {
+  study_hours:         {"0":11.9928,"1":7.0032,"2":5.5,   "3":4.9876,"4":1.0046,"5":5.8287},
+  exam_score:          {"0":15.9642,"1":10.981, "2":11.5,  "3":18.0012,"4":7.5542,"5":12.2897},
+  sleep_hours:         {"0":4.0182, "1":4.783,  "2":7.5,   "3":9.0024,"4":8.0108,"5":6.7991},
+  exercise_minutes:    {"0":3.162,  "1":2.1864, "2":75.0,  "3":80.61, "4":2.144, "5":21.6233},
+  social_media_hours:  {"0":1.0006, "1":4.5124, "2":3.0,   "3":1.4996,"4":9.4988,"5":3.8857},
+  mental_health_score: {"0":2.01,   "1":2.0421, "2":4.5,   "3":9.902, "4":3.992, "5":5.1031},
+  burnout_level:       {"0":8.968,  "1":9.9479, "2":8.5,   "3":1.096, "4":1.976, "5":7.3318},
+  stress_level:        {"0":9.1914, "1":9.9246, "2":6.0,   "3":1.5464,"4":2.9756,"5":6.5538},
+};
+
+function renderComparisonTable(data, input, assignedC) {
+  const allInfo = data.all_cluster_info;
+  const thead   = document.querySelector('#comparisonTable thead');
+  const tbody   = document.querySelector('#comparisonTable tbody');
+
+  const featLabels = {
+    study_hours:'Study Hrs', exam_score:'Exam Score', sleep_hours:'Sleep',
+    exercise_minutes:'Exercise', social_media_hours:'Social Media',
+    mental_health_score:'Mental Hlth', burnout_level:'Burnout', stress_level:'Stress'
+  };
+
+  // Header
+  thead.innerHTML = `<tr>
+    <th>Cluster</th>
+    ${CMP_FEATS.map(f => `<th>${featLabels[f]||f}</th>`).join('')}
+  </tr>`;
+
+  // Student row
+  const studentRow = `<tr style="background:rgba(124,106,255,.07)">
+    <td style="color:#7c6aff;font-weight:600;font-family:'IBM Plex Mono',monospace;font-size:11px">YOU</td>
+    ${CMP_FEATS.map(f => {
+      const v   = input[f];
+      const cen = CLUSTER_PROFILES[f]?.[String(assignedC)];
+      let delta = '';
+      if (cen !== undefined && v !== undefined) {
+        const diff = v - cen;
+        const pxW  = Math.min(28, Math.abs(diff) * 1.6);
+        delta = diff > 0
+          ? `<span class="dev-bar-pos" style="width:${pxW}px;opacity:.8"></span>`
+          : `<span class="dev-bar-neg" style="width:${pxW}px;opacity:.8"></span>`;
+      }
+      return `<td style="color:#c5d0e6">${fmtNum(v)}${delta}</td>`;
+    }).join('')}
+  </tr>`;
+
+  // Per-cluster rows
+  const clusterRows = Object.keys(allInfo).map(k => {
+    const ki  = parseInt(k);
+    const inf = allInfo[k];
+    const col = CLUSTER_COLORS[ki];
+    const isAssigned = ki === assignedC;
+
+    const cells = CMP_FEATS.map(f => {
+      const cen = CLUSTER_PROFILES[f]?.[k];
+      if (cen === undefined) return `<td style="color:var(--muted)">—</td>`;
+      // Show delta vs student value
+      const studentVal = input[f];
+      const diff = studentVal !== undefined ? studentVal - cen : null;
+      let indicator = '';
+      if (diff !== null && isAssigned) {
+        const pxW = Math.min(28, Math.abs(diff) * 1.6);
+        indicator = diff > 0
+          ? `<span class="dev-bar-pos" style="width:${pxW}px;opacity:.6"></span>`
+          : `<span class="dev-bar-neg" style="width:${pxW}px;opacity:.6"></span>`;
+      }
+      return `<td>${fmtNum(cen)}${indicator}</td>`;
+    }).join('');
+
+    const iconSvg = clusterSvg(ki, 11, col);
+    return `<tr class="${isAssigned ? 'highlight' : ''}">
+      <td style="color:${col};display:flex;align-items:center;gap:5px;white-space:nowrap">${iconSvg} ${inf.short}</td>
+      ${cells}
+    </tr>`;
+  }).join('');
+
+  tbody.innerHTML = studentRow + clusterRows;
+}
+
+function fmtNum(v) {
+  if (v === undefined || v === null) return '—';
+  return typeof v === 'number' ? (v % 1 === 0 ? v : v.toFixed(1)) : v;
+}
+
+// ── Recommendations ──────────────────────────────────────────────────────────
+function renderRecommendations(info) {
+  const grid = document.getElementById('recGrid');
+  grid.innerHTML = info.interventions.map(iv => {
+    const p = iv.priority;
+    return `
+      <div class="rec-card ${p}">
+        <div class="rec-icon">${intervSvg(p)}</div>
+        <div class="rec-body">
+          <div class="rec-priority ${p}">${p.toUpperCase()}</div>
+          <div class="rec-text">${iv.text}</div>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+// ── What-if guidance ─────────────────────────────────────────────────────────
+function renderWhatIf(data, input, c) {
+  const feats = data.feature_names;
+  const shap  = data.shap_values;
+  const info  = data.cluster_info;
+
+  // Find top 5 by abs magnitude
+  const top5 = feats.map((f, i) => ({ f, v: shap[i], iv: input[f] || 0 }))
+    .sort((a, b) => Math.abs(b.v) - Math.abs(a.v))
+    .slice(0, 5);
+
+  const ADVICE = {
+    sleep_hours:         { inc: 'Getting more sleep (aim 7–8h) can significantly reduce burnout and improve focus.', dec: 'Reduced sleep is a major burnout risk — prioritise rest.' },
+    study_hours:         { inc: 'Structured study time is key. Try Pomodoro (25min on / 5min off).', dec: 'Study hours are a top driver — even +1h/day has measurable impact.' },
+    burnout_level:       { inc: 'Burnout is rising. Immediate workload reduction and breaks are critical.', dec: 'Low burnout is a strong positive signal — keep recovery habits in place.' },
+    mental_health_score: { inc: 'Mental health improvement is strongly linked to cluster stability. Consider counseling.', dec: 'Mental health decline is the top risk factor here. Seek support early.' },
+    stress_level:        { inc: 'Chronic stress is reducing performance. Structured relaxation and time-boxing can help.', dec: 'Lower stress levels allow better encoding of academic material.' },
+    social_media_hours:  { inc: 'Reducing social media by 1–2h/day could free significant productive time.', dec: 'Moderate social engagement can be healthy for wellbeing.' },
+    exercise_minutes:    { inc: 'Regular exercise (30+ min) is a proven stress buffer and focus enhancer.', dec: 'Physical activity level is lower than ideal — even short walks help.' },
+    caffeine_intake:     { inc: 'High caffeine correlates with sleep disruption — consider reducing after 2pm.', dec: 'Caffeine level is well-managed.' },
+    focus_index:         { inc: 'Focus training (deep work blocks, app blockers) directly improves output.', dec: 'Focus decline may indicate cognitive overload — reduce task-switching.' },
+    exam_score:          { inc: 'Higher exam performance would move this student toward lower-risk clusters.', dec: 'Exam score is the most direct academic signal. Tutoring may help.' },
+  };
+
+  const lines = top5.map(p => {
+    const adv = ADVICE[p.f];
+    if (!adv) return null;
+    const direction = p.v > 0 ? 'inc' : 'dec';
+    const hint = adv[direction] || '';
+    const valStr = fmtNum(p.iv);
+    return `<div style="display:flex;gap:12px;margin-bottom:12px;align-items:flex-start">
+      <div style="min-width:10px;margin-top:6px;width:10px;height:10px;border-radius:50%;background:${p.v>0?'var(--accent)':'var(--risk-critical)'};flex-shrink:0"></div>
+      <div>
+        <div style="font-size:12px;font-weight:600;color:var(--text);margin-bottom:2px">
+          ${p.f.replace(/_/g,' ')} <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--muted)">(current: ${valStr})</span>
+        </div>
+        <div style="font-size:12px;color:var(--muted2);line-height:1.55">${hint}</div>
+      </div>
+    </div>`;
+  }).filter(Boolean).join('');
+
+  document.getElementById('whatIfContent').innerHTML = lines ||
+    '<p style="color:var(--muted);font-size:13px">No specific what-if guidance available for this cluster.</p>';
+}
+
+// ── Toast ────────────────────────────────────────────────────────────────────
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 4000);
+}
+
+// ── Init ─────────────────────────────────────────────────────────────────────
+buildSliders();
+</script>
+</body>
+</html>

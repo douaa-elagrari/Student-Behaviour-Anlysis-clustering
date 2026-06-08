@@ -1,0 +1,47 @@
+{
+  "total_students": 2224,
+  "n_clusters": 6,
+  "features_used": [
+    "age",
+    "study_hours",
+    "self_study_hours",
+    "online_classes_hours",
+    "social_media_hours",
+    "sleep_hours",
+    "screen_time_hours",
+    "exercise_minutes",
+    "caffeine_intake",
+    "mental_health_score",
+    "focus_index",
+    "burnout_level",
+    "productivity_score",
+    "exam_score",
+    "exam_study_hours",
+    "stress_level",
+    "intervention"
+  ],
+  "n_features": 17,
+  "cluster_sizes": {
+    "0": 500,
+    "1": 499,
+    "2": 2,
+    "3": 500,
+    "4": 500,
+    "5": 223
+  },
+  "risk_distribution": {
+    "low": 999,
+    "medium": 225,
+    "high": 500,
+    "critical": 500
+  },
+  "model_pipeline": [
+    "StandardScaler",
+    "Contrastive Encoder (TF/Keras — 256→128→64 dim)",
+    "KMeans on embeddings",
+    "RF Surrogate + SHAP for XAI"
+  ],
+  "metrics": {
+    "note": "Run evaluate_clustering(X_scaled, contrastive_labels) for live metrics"
+  }
+}

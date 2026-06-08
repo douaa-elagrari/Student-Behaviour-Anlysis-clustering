@@ -1,0 +1,194 @@
+{
+  "0": {
+    "name": "High-Achievement but Strained",
+    "short": "Strained",
+    "description": "Highly engaged students under sustained pressure. Intensive studying, exam-focused behavior, dependence on stimulants, reduced lifestyle balance. Lower mental health score suggests chronic stress.",
+    "color": "#fb923c",
+    "risk": "high",
+    "size": 500,
+    "traits": [
+      "Intensive studying",
+      "Exam-focused",
+      "High caffeine",
+      "Reduced sleep"
+    ],
+    "interventions": [
+      {
+        "priority": "urgent",
+        "text": "Mandatory Pomodoro-based study break scheduling"
+      },
+      {
+        "priority": "high",
+        "text": "Sleep hygiene workshops & rest tracker enrollment"
+      },
+      {
+        "priority": "high",
+        "text": "Counseling referral for stress management"
+      },
+      {
+        "priority": "medium",
+        "text": "Caffeine reduction program with healthy alternatives"
+      }
+    ]
+  },
+  "1": {
+    "name": "Balanced & Healthy",
+    "short": "Balanced",
+    "description": "Strong cognitive performance, emotional stability, healthy routines, low stimulant dependency. Productive without extreme stress.",
+    "color": "#34d399",
+    "risk": "low",
+    "size": 499,
+    "traits": [
+      "Optimal sleep",
+      "High focus",
+      "Healthy lifestyle",
+      "Low stress"
+    ],
+    "interventions": [
+      {
+        "priority": "low",
+        "text": "Maintain current routines — periodic check-ins only"
+      },
+      {
+        "priority": "low",
+        "text": "Peer mentoring opportunities for higher-risk clusters"
+      },
+      {
+        "priority": "medium",
+        "text": "Advanced enrichment programs to sustain engagement"
+      },
+      {
+        "priority": "low",
+        "text": "Leadership and collaborative project opportunities"
+      }
+    ]
+  },
+  "2": {
+    "name": "Disciplined but Struggling",
+    "short": "Struggling",
+    "description": "Consistent effort and healthy routines, but not translating into strong outcomes. May reflect inefficient study strategies or cognitive overload.",
+    "color": "#fbbf24",
+    "risk": "medium",
+    "size": 2,
+    "traits": [
+      "High effort",
+      "Healthy habits",
+      "Low output",
+      "Study inefficiency"
+    ],
+    "interventions": [
+      {
+        "priority": "high",
+        "text": "Study strategy workshops — active recall, spaced repetition"
+      },
+      {
+        "priority": "high",
+        "text": "Academic tutoring and learning style assessment"
+      },
+      {
+        "priority": "medium",
+        "text": "Cognitive load management training"
+      },
+      {
+        "priority": "medium",
+        "text": "Progress tracking with structured goal-setting"
+      }
+    ]
+  },
+  "3": {
+    "name": "Leisure-Oriented",
+    "short": "Leisure",
+    "description": "Low academic intensity, more passive digital activity, less exam-focused. Higher sleep may indicate reduced stress or lower workload.",
+    "color": "#60a5fa",
+    "risk": "low",
+    "size": 500,
+    "traits": [
+      "High social media",
+      "Low study hours",
+      "Good sleep",
+      "Low academic drive"
+    ],
+    "interventions": [
+      {
+        "priority": "high",
+        "text": "Academic engagement program with motivational incentives"
+      },
+      {
+        "priority": "high",
+        "text": "Digital usage limits & structured study scheduling"
+      },
+      {
+        "priority": "medium",
+        "text": "Career counseling to build intrinsic motivation"
+      },
+      {
+        "priority": "medium",
+        "text": "Social learning groups leveraging social strengths"
+      }
+    ]
+  },
+  "4": {
+    "name": "Burnout Risk",
+    "short": "Burnout",
+    "description": "Chronic overload without effective recovery. Extreme caffeine, high stress and burnout, poor mental health, declining performance despite effort.",
+    "color": "#f87171",
+    "risk": "critical",
+    "size": 500,
+    "traits": [
+      "Extreme burnout",
+      "Poor mental health",
+      "Sleep deprived",
+      "Critical caffeine"
+    ],
+    "interventions": [
+      {
+        "priority": "urgent",
+        "text": "IMMEDIATE: Mental health crisis intervention referral"
+      },
+      {
+        "priority": "urgent",
+        "text": "Mandatory workload reduction — academic accommodations"
+      },
+      {
+        "priority": "urgent",
+        "text": "Professional counseling — mandatory weekly sessions"
+      },
+      {
+        "priority": "high",
+        "text": "Emergency sleep & nutrition recovery support program"
+      }
+    ]
+  },
+  "5": {
+    "name": "Productive but Inconsistent",
+    "short": "Inconsistent",
+    "description": "Elevated productivity yet exam scores slightly below average. Balancing many responsibilities simultaneously. Moderate burnout but no severe collapse.",
+    "color": "#c084fc",
+    "risk": "medium",
+    "size": 223,
+    "traits": [
+      "High productivity",
+      "Multi-tasking",
+      "Inconsistent output",
+      "Variable focus"
+    ],
+    "interventions": [
+      {
+        "priority": "medium",
+        "text": "Exam strategy training — translate productivity to scores"
+      },
+      {
+        "priority": "medium",
+        "text": "Prioritization training to reduce task fragmentation"
+      },
+      {
+        "priority": "low",
+        "text": "Performance consistency & focus coaching"
+      },
+      {
+        "priority": "low",
+        "text": "Time management optimization workshops"
+      }
+    ]
+  }
+}
